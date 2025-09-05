@@ -1,6 +1,19 @@
 import pytest
 from model import Question
 
+@pytest.fixture
+def question_with_multiple_choices():
+    """
+    Retorna uma questão com 4 escolhas já criadas e 2 estando certas
+    """
+    q = Question(title="q", max_selections=2)
+    q.add_choice("a")
+    q.add_choice("b")
+    q.add_choice("c")
+    q.add_choice("d")
+    
+    q.set_correct_choices([1, 4])
+    return q
 
 def test_create_question():
     question = Question(title='q1')
@@ -100,13 +113,12 @@ def test_set_correct_choices_with_invalid_id():
 
 def test_correct_selected_choices():
     question = Question(title='q1', max_selections=2)
-    question.add_choice('a', False)
     question.add_choice('b', True)
     
-    corrected_choices = question.correct_selected_choices([1, 2])
+    corrected_choices = question.correct_selected_choices([1])
 
     assert len(corrected_choices) == 1
-    assert corrected_choices == [2]
+    assert corrected_choices == [1]
 
 def test_correct_selected_choices_with_more_than_max_selections():
     question = Question(title='q1')
@@ -115,3 +127,16 @@ def test_correct_selected_choices_with_more_than_max_selections():
     
     with pytest.raises(Exception):
         _ = question.correct_selected_choices([1, 2])
+
+def test_correct_selected_choices_with_multiple_choices_both_right(question_with_multiple_choices):
+    corrected_choices = question_with_multiple_choices.correct_selected_choices([1, 4])
+
+    assert len(corrected_choices) == 2
+    assert sorted(corrected_choices) == [1, 4]
+
+def test_correct_selected_choices_with_multiple_choices_one_wrong(question_with_multiple_choices):
+    corrected_choices = question_with_multiple_choices.correct_selected_choices([2, 4])
+
+    assert len(corrected_choices) == 1
+    assert sorted(corrected_choices) == [4]
+
